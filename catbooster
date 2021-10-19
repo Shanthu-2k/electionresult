@@ -1,0 +1,68 @@
+from google.colab import drive
+import numpy as np
+import pandas as pd
+import os
+drive.mount("/content/gdrive")
+df = pd.read_csv('/content/gdrive/My Drive/LS_2.0.csv')
+df.head()
+TO FIND NUMBER OF Nan VALUS IN EACH COLUMN
+for col in df.columns:
+    print(np.sum(df[col].isnull()))
+ CONVERTED NOTA ROW VALUES 'NOTA'
+df[df['NAME']=='NOTA']=df[df['NAME']=='NOTA'].replace(np.nan,'NOTA')
+ SOME DATA PREPROCESSING
+df['ASSETS']=df['ASSETS'].replace('Not Available','0')
+df['LIABILITIES']=df['LIABILITIES'].replace('Not Available','0')
+df['ASSETS']=df['ASSETS'].replace('Nil','0')
+df['LIABILITIES']=df['LIABILITIES'].replace('Nil','0')
+df['LIABILITIES']=df['LIABILITIES'].replace('NIL','0')
+df['ASSETS']=df['ASSETS'].replace('`','0')
+df['LIABILITIES']=df['LIABILITIES'].replace('`','0')
+df['ASSETS']=df['ASSETS'].replace('NOTA','0')
+df['LIABILITIES']=df['LIABILITIES'].replace('NOTA','0')
+df['AGE']=df['AGE'].replace('NOTA',0)
+df['CRIMINAL\nCASES']=df['CRIMINAL\nCASES'].replace('NOTA',0)
+df['CRIMINAL\nCASES'].replace('Not Available','0',inplace=True)
+df['CRIMINAL\nCASES']=df['CRIMINAL\nCASES'].astype('int')
+df['ASSETS']=df['ASSETS'].replace(',','',regex=True)
+df['LIABILITIES']=df['LIABILITIES'].replace(',','',regex=True)
+df['ASSETS']=df['ASSETS'].replace('Nil','0',regex=True)
+df['LIABILITIES']=df['LIABILITIES'].replace('Nil','0',regex=True)
+df['ASSETS']=df['ASSETS'].str.extract(pat='([0-9]+)')
+df['LIABILITIES']=df['LIABILITIES'].str.extract(pat='([0-9]+)') 
+
+df['ASSETS']=df['ASSETS'].astype('float')
+df['LIABILITIES']=df['LIABILITIES'].astype('float')
+df.dtypes
+SOME FEATURE ENGINEERING
+df['Is_NOTA']=df['NAME']=='NOTA'
+SPLITTING DATA INTO TRAIN AND TEST SET
+X=df.drop(['WINNER','NAME','SYMBOL'],axis=1)
+y=df['WINNER']
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y ,test_size=0.33, random_state=42)
+pip install catboost
+TRAINING MODEL USING CATBOOST CLASSIFIER ON TRAIN DATA
+from catboost import CatBoostClassifier
+
+clf = CatBoostClassifier(
+    iterations=500, 
+    learning_rate=0.1, 
+    #loss_function='CrossEntropy'
+)
+
+
+clf.fit(X_train, y_train, 
+        cat_features= [0,1,2,3,4,6,7], 
+         
+        verbose=False
+        
+)
+
+print('CatBoost model is fitted: ' + str(clf.is_fitted()))
+print('CatBoost model parameters:')
+print(clf.get_params())
+PREDICTING ON TEST SET
+from sklearn.metrics import accuracy_score
+y_pred=clf.predict(X_test)
+print('ACCURACY SCORE is:' ,accuracy_score(y_pred,y_test))
