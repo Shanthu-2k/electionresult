@@ -1,0 +1,5 @@
+import seaborn as sns
+sns.set(rc={'figure.figsize':(6,9)}) 
+plt.xlabel("Algorithms")
+plt.ylabel("Accuracy score") 
+sns.barplot(algorithms,scores)
